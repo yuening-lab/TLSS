@@ -18,6 +18,12 @@ The code has been successfully tested in the following environment. (For older v
 * numpy 1.18.5
 
 
+### Sample dataset
+Data lenth: 4/1/2020 - 9/30/2020
+* COVID-19 cases data
+* sentiment data extracted from COVID-19 related news
+* semantic data extracted from COVID-19 related news
+
 ### Cite
 Please cite our paper if you find this code useful for your research
 ```
