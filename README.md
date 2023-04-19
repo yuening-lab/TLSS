@@ -8,6 +8,7 @@ Jing Chen, German G. Creamer, Yue Ning
 
 [GDELT news data](https://www.gdeltproject.org/) is available online
 
+
 ### Prerequisites
 The code has been successfully tested in the following environment. (For older versions, you may need to modify the code)
 
@@ -17,11 +18,13 @@ dgl 0.8.1
 Sklearn 0.23.1
 numpy 1.18.5
 
+
 ### Cite
 Please cite our paper if you find this code useful for your research
 ```
 J. Chen, G. G. Creamer and Y. Ning, "Forecasting Emerging Pandemics with Transfer Learning and Location-aware News Analysis," 2022 IEEE International Conference on Big Data (Big Data), Osaka, Japan, 2022, pp. 874-883, doi: 10.1109/BigData55660.2022.10020218.
 ```
+
 
 ### BibTex
 ```
