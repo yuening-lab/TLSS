@@ -1,4 +1,3 @@
-```python
 class TLDynamic_SS(nn.Module):
     def __init__(self, args, data): 
         super().__init__()
@@ -123,4 +122,3 @@ class TLDynamic_SS(nn.Module):
             out = out * self.ratio + z; #[batch, m]
 
         return out,None
-```
