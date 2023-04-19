@@ -18,7 +18,7 @@ The code has been successfully tested in the following environment. (For older v
 * numpy 1.18.5
 
 
-### Sample dataset (data folder)
+### Sample dataset ([data](./data))
 Data lenth: 4/1/2020 - 9/30/2020
 * COVID-19 cases data
 * sentiment data extracted from COVID-19 related news
