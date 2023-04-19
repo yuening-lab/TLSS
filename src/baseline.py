@@ -1,3 +1,20 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import print_function
+
+import numpy as np
+import torch
+import torch.nn as nn
+from torch.nn import Linear, Parameter
+import torch.nn.functional as F
+from layers import *
+from utils import *
+from torch.autograd import Variable
+import sys
+
+
 class cola_gnn(nn.Module):  
     def __init__(self, args, data): 
         super().__init__()
@@ -124,10 +141,9 @@ class ARMA(nn.Module):
         self.n = 2 # larger worse
         self.w = 2*self.w - self.n + 1 
         self.weight = Parameter(torch.Tensor(self.w, self.m)) # 20 * 49
-        self.weight1 = Parameter(torch.Tensor(self.w, self.m))
         self.bias = Parameter(torch.zeros(self.m)) # 49
         nn.init.xavier_normal(self.weight)
-        nn.init.xavier_normal(self.weight1)
+
 
         args.output_fun = None;
         self.output = None
@@ -136,7 +152,7 @@ class ARMA(nn.Module):
         if (args.output_fun == 'tanh'):
             self.output = F.tanh;
 
-    def forward(self, x, x1):
+    def forward(self, x):
         x_o = x
         x = x.permute(0,2,1).contiguous()
         n = self.n
@@ -146,86 +162,11 @@ class ARMA(nn.Module):
         x = x.permute(0,2,1).contiguous()
         x = torch.cat((x_o,x), dim=1)
 
-        x_o1 = x1
-        x1 = x1.permute(0,2,1).contiguous()
-        n = self.n
-        cumsum = torch.cumsum(x1,dim=-1)
-        cumsum[:,:,n:] = cumsum[:,:,n:] - cumsum[:,:,:-n]
-        x1 = cumsum[:,:,n - 1:] / n
-        x1 = x1.permute(0,2,1).contiguous()
-        x1 = torch.cat((x_o1,x1), dim=1)
-        x = torch.sum(x * self.weight, dim=1) + torch.sum(x1 * self.weight1, dim=1) + self.bias
+        x = torch.sum(x * self.weight, dim=1) + self.bias
         if (self.output != None):
             x = self.output(x)
         return x, None
 
-class ARMA_news(nn.Module): 
-    def __init__(self, args, data):
-        super(ARMA_news, self).__init__()
-        self.m = data.m
-        self.w = args.window
-        self.n = 2 # larger worse
-        self.w = 2*self.w - self.n + 1 
-        self.weight = Parameter(torch.Tensor(self.w, self.m)) # 20 * 49
-        self.weight1 = Parameter(torch.Tensor(self.w, self.m))
-        self.weight2 = Parameter(torch.Tensor(self.w, self.m))
-        self.weight3 = Parameter(torch.Tensor(self.w, self.m*self.m))
-        self.bias = Parameter(torch.zeros(self.m)) # 49
-        self.fc = nn.Linear(self.m*self.m, self.m)
-        nn.init.xavier_normal_(self.weight)
-        nn.init.xavier_normal_(self.weight1)
-        nn.init.xavier_normal_(self.weight2)
-        nn.init.xavier_normal_(self.weight3)
-
-        args.output_fun = None;
-        self.output = None
-        if (args.output_fun == 'sigmoid'):
-            self.output = F.sigmoid;
-        if (args.output_fun == 'tanh'):
-            self.output = F.tanh;
-
-    def forward(self, x, x1, x2, x3):
-        x_o = x
-        x = x.permute(0,2,1).contiguous()
-        n = self.n
-        cumsum = torch.cumsum(x,dim=-1)
-        cumsum[:,:,n:] = cumsum[:,:,n:] - cumsum[:,:,:-n]
-        x = cumsum[:,:,n - 1:] / n
-        x = x.permute(0,2,1).contiguous()
-        x = torch.cat((x_o,x), dim=1)
-
-        x_o1 = x1
-        x1 = x1.permute(0,2,1).contiguous()
-        n = self.n
-        cumsum = torch.cumsum(x1,dim=-1)
-        cumsum[:,:,n:] = cumsum[:,:,n:] - cumsum[:,:,:-n]
-        x1 = cumsum[:,:,n - 1:] / n
-        x1 = x1.permute(0,2,1).contiguous()
-        x1 = torch.cat((x_o1,x1), dim=1)
-
-        x_o2 = x2
-        x2 = x2.permute(0,2,1).contiguous()
-        n = self.n
-        cumsum = torch.cumsum(x2,dim=-1)
-        cumsum[:,:,n:] = cumsum[:,:,n:] - cumsum[:,:,:-n]
-        x2 = cumsum[:,:,n - 1:] / n
-        x2 = x2.permute(0,2,1).contiguous()
-        x2 = torch.cat((x_o2,x2), dim=1)
-
-        x_o3 = x3
-        x3 = x3.permute(0,2,1).contiguous()
-        n = self.n
-        cumsum = torch.cumsum(x3,dim=-1)
-        cumsum[:,:,n:] = cumsum[:,:,n:] - cumsum[:,:,:-n]
-        x3 = cumsum[:,:,n - 1:] / n
-        x3 = x3.permute(0,2,1).contiguous()
-        x3 = torch.cat((x_o3,x3), dim=1)
-
-        x3 = self.fc(torch.sum(x3 * self.weight3, dim=1))
-        x = torch.sum(x * self.weight, dim=1) + torch.sum(x1 * self.weight1, dim=1) + torch.sum(x2 * self.weight2, dim=1) + x3 + self.bias
-        if (self.output != None):
-            x = self.output(x)
-        return x, None
 
 class AR(nn.Module):
     def __init__(self, args, data):
@@ -233,10 +174,8 @@ class AR(nn.Module):
         self.m = data.m
         self.w = args.window
         self.weight = Parameter(torch.Tensor(self.w, self.m)) # 20 * 49self.m
-        self.weight1 = Parameter(torch.Tensor(self.w, self.m))
         self.bias = Parameter(torch.zeros(self.m)) # 49
         nn.init.xavier_normal(self.weight)
-        nn.init.xavier_normal(self.weight1)
 
         args.output_fun = None;
         self.output = None
@@ -245,43 +184,13 @@ class AR(nn.Module):
         if (args.output_fun == 'tanh'):
             self.output = F.tanh;
 
-    def forward(self, x, x1):
+    def forward(self, x):
         batch_size = x.size(0);
-        x = torch.sum(x * self.weight, dim=1) + self.bias + torch.sum(x1 * self.weight1, dim=1)
+        x = torch.sum(x * self.weight, dim=1) + self.bias
         if (self.output != None):
             x = self.output(x)
         return x,None
 
-class AR_news(nn.Module):
-    def __init__(self, args, data):
-        super(AR_news, self).__init__()
-        self.m = data.m
-        self.w = args.window
-        self.weight = Parameter(torch.Tensor(self.w, self.m)) # 20 * 49self.m
-        self.weight1 = Parameter(torch.Tensor(self.w, self.m))
-        self.weight2 = Parameter(torch.Tensor(self.w, self.m))
-        self.weight3 = Parameter(torch.Tensor(self.w, self.m*self.m))
-        self.bias = Parameter(torch.zeros(self.m)) # 49
-        self.fc = nn.Linear(self.m*self.m, self.m)
-        nn.init.xavier_normal_(self.weight)
-        nn.init.xavier_normal_(self.weight1)
-        nn.init.xavier_normal_(self.weight2)
-        nn.init.xavier_normal_(self.weight3)
-
-        args.output_fun = None;
-        self.output = None
-        if (args.output_fun == 'sigmoid'):
-            self.output = F.sigmoid;
-        if (args.output_fun == 'tanh'):
-            self.output = F.tanh;
-
-    def forward(self, x, x1, x2, x3):
-        batch_size = x.size(0);
-        x3 = self.fc(torch.sum(x3 * self.weight3, dim=1))
-        x = torch.sum(x * self.weight, dim=1) + torch.sum(x1 * self.weight1, dim=1) + torch.sum(x2 * self.weight2, dim=1) + x3 + self.bias
-        if (self.output != None):
-            x = self.output(x)
-        return x,None
 
 class VAR(nn.Module):
     def __init__(self, args, data):
@@ -297,10 +206,9 @@ class VAR(nn.Module):
         if (args.output_fun == 'tanh'):
             self.output = F.tanh;
 
-    def forward(self, x, x1):
+    def forward(self, x):
         x = x.view(-1, self.m * self.w);
-        x1 = x1.view(-1, self.m * self.w);
-        x = self.linear(x) + self.linear(x1);
+        x = self.linear(x);
         #print(x.shape)
         if (self.output != None):
             x = self.output(x);
