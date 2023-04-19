@@ -3,7 +3,7 @@ This is the source code for paper ["Forecasting Emerging Pandemics with Transfer
 
 Jing Chen, German G. Creamer, Yue Ning
 
-## Data
+### Data
 [United States COVID-19 Cases and Deaths by State over Time](https://data.cdc.gov/Case-Surveillance/United-States-COVID-19-Cases-and-Deaths-by-State-o/9mfq-cb36) is available online
 [GDELT news data](https://www.gdeltproject.org/) is available online
 
