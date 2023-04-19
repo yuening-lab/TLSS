@@ -13,7 +13,6 @@ The code has been successfully tested in the following environment. (For older v
 
 * Python 3.9.4
 * PyTorch 1.11.0
-* dgl 0.8.1
 * Sklearn 0.23.1
 * numpy 1.18.5
 
